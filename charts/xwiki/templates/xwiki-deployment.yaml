@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xwiki
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.replicaCount.xwiki }}
+  selector:
+    matchLabels:
+      app: xwiki
+  template:
+    metadata:
+      labels:
+        app: xwiki
+    spec:
+      containers:
+        - name: xwiki
+          image: "{{ .Values.image.xwiki.repository }}:{{ .Values.image.xwiki.tag }}"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: xwiki-db-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: xwiki-db-secret
+                  key: DB_PASSWORD
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: xwiki-db-secret
+                  key: DB_DATABASE
+            - name: DB_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: xwiki-db-secret
+                  key: DB_SERVER
+          volumeMounts:
+            - name: xwiki-storage
+              mountPath: /usr/local/xwiki
+      volumes:
+        - name: xwiki-storage
+          persistentVolumeClaim:
+            claimName: xwiki-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xwiki-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: xwiki

@@ -1,0 +1,21 @@
+global:
+  environment: production
+
+replicaCount:
+  xwiki: 1
+
+image:
+  xwiki:
+    repository: xwiki
+    tag: "lts-postgresql-tomcat"
+    pullPolicy: IfNotPresent
+  postgres:
+    repository: postgres
+    tag: "15-alpine"
+
+storage:
+  className: "gp2"
+  postgresSize: 20Gi
+  xwikiDataSize: 30Gi
+
+domain: "xwiki.yourcompany.com"

@@ -1,0 +1,7 @@
+replicaCount:
+  xwiki: 2
+
+domain: "xwiki.yourcompany.com"
+
+storage:
+  className: "ocs-storagecluster-cephfs"

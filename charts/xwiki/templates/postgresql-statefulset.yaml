@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: xwiki-postgresql
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceName: "xwiki-postgresql"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xwiki-postgresql
+  template:
+    metadata:
+      labels:
+        app: xwiki-postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: "{{ .Values.image.postgres.repository }}:{{ .Values.image.postgres.tag }}"
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: xwiki-db-secret
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: xwiki-db-secret
+                  key: DB_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: xwiki-db-secret
+                  key: DB_DATABASE
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "{{ .Values.storage.className }}"
+        resources:
+          requests:
+            storage: "{{ .Values.storage.postgresSize }}"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xwiki-postgresql
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: xwiki-postgresql
